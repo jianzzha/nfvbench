@@ -69,16 +69,16 @@ if [ "$FORWARDER" == "testpmd" ]; then
     screen -dmSL testpmd /dpdk/testpmd \
                          -c $CPU_MASKS \
                          -n 4 \
+                         --socket-mem 1024 \
                          -- \
                              --burst=32 \
-                             --txd=256 \
-                             --rxd=1024 \
+                             --rxd=2048 \
+                             --txd=2048 \
                              --eth-peer=0,$TG_MAC1 \
                              --eth-peer=1,$TG_MAC2 \
                              --forward-mode=mac \
                              --nb-cores=$WORKER_CORES \
-                             --max-pkt-len=9000 \
-                             --cmdline-file=/dpdk/testpmd_cmd.txt
+                             --max-pkt-len=9000
 else
     echo "Configuring vpp..."
     cp /vpp/startup.conf /etc/vpp/startup.conf

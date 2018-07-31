@@ -7,22 +7,8 @@
 
 set -e
 
-# Artifact URL
-gs_url=artifacts.opnfv.org/nfvbench/images
-
-# image version number
-__version__=0.6
-image_name=nfvbenchvm_centos-$__version__
-
-# if image exists skip building
-if  command -v gsutil >/dev/null; then
-    if gsutil -q stat gs://$gs_url/$image_name.qcow2; then
-        echo "Image already exists at http://$gs_url/$image_name.qcow2"
-        exit 0
-    fi
-else
-    echo "Cannot check image availability in OPNFV artifact repository (gsutil not available)"
-fi
+__version__=0.7
+image_name=nfvbenchvm-$__version__
 
 # install diskimage-builder
 if [ -d dib-venv ]; then
@@ -48,16 +34,13 @@ export DIB_CLOUD_INIT_DATASOURCES="ConfigDrive"
 export DIB_YUM_REPO_CONF=$ELEMENTS_PATH/nfvbenchvm/fdio-release.repo
 
 # Use ELRepo to have latest kernel
-export DIB_USE_ELREPO_KERNEL=True
+export DIB_USE_ELREPO_KERNEL=false
+export DIB_LOCAL_IMAGE=/root/nfvbench/nfvbenchvm/dib/rhel-server-7.4-x86_64-kvm.qcow2
+export DIB_DEBUG_TRACE=1
 
 echo "Building $image_name.qcow2..."
-time disk-image-create -o $image_name centos7 nfvbenchvm
-ls -l $image_name.qcow2
-
-if command -v gsutil >/dev/null; then
-    echo "Uploading $image_name.qcow2..."
-    gsutil cp $image_name.qcow2 gs://$gs_url/$image_name.qcow2
-    echo "You can access to image at http://$gs_url/$image_name.qcow2"
-else
-    echo "Cannot upload new image to the OPNFV artifact repository (gsutil not available)"
+time disk-image-create -o $image_name rhel7 rhelvm
+if [ -d /root/nfvbench_ws ]; then
+   mv -f $image_name.qcow2 /root/nfvbench_ws/
 fi
+
